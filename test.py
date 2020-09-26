@@ -58,20 +58,63 @@ if __name__ == "__main__":
     mln = MLN(logic="FuzzyLogic", grammar="PRACGrammar")
     # declares the constants
     for ent in e2i.keys():
-        mln.update_domain({"ents": [ent]})
+        ent_type = ent.split("-")[-1]
+        if ent_type == "r":
+            mln.update_domain({"rooms": [ent]})
+        elif ent_type == "l":
+            mln.update_domain({"locations": [ent]})
+        elif ent_type == "o":
+            mln.update_domain({"objects": [ent]})
+        elif ent_type == "a":
+            mln.update_domain({"actions": [ent]})
+        elif ent_type == "s":
+            mln.update_domain({"states": [ent]})
+        else:
+            print("Error: Unknown entity type for domains!")
+            exit()
+
     # declares the predicates
+    rel2mln = {
+        "HasEffect": [["actions", "states"], ["IsAction(+?x, Action)", "IsState(+?y, State)"]],
+        "InverseActionOf": [["actions", "actions"], ["IsAction(+?x, Action)", "IsAction(+?y, Action)"]],
+        "InverseStateOf": [["states", "states"], ["IsState(+?x, State)", "IsState(+?y, State)"]],
+        "ObjInRoom": [["objects", "rooms"], ["IsObject(+?x, Object)", "IsRoom(+?y, Room)"]],
+        "LocInRoom": [["locations", "rooms"], ["IsLocation(+?x, Location)", "IsRoom(+?y, Room)"]],
+        "ObjOnLoc": [["objects", "locations"], ["IsObject(+?x, Object)", "IsLocation(+?y, Location)"]],
+        "ObjInLoc": [["objects", "locations"], ["IsObject(+?x, Object)", "IsLocation(+?y, Location)"]],
+        "ObjCanBe": [["objects", "actions"], ["IsObject(+?x, Object)", "IsAction(+?y, Action)"]],
+        "ObjUsedTo": [["objects", "actions"], ["IsObject(+?x, Object)", "IsAction(+?y, Action)"]],
+        "ObjhasState": [["objects", "states"], ["IsObject(+?x, Object)", "IsState(+?y, State)"]],
+        "OperatesOn": [["objects", "objects"], ["IsObject(+?x, Object)", "IsObject(+?y, Object)"]]
+    }
     for rel in r2i.keys():
-        mln.predicate(Predicate(rel, ["ents", "ents"]))
-    mln.predicate(Predicate("IsA", ["ents", "entity"]))
+        mln.predicate(Predicate(rel, rel2mln[rel][0]))
+    mln.predicate(Predicate("IsRoom", ["rooms", "Room"]))
+    mln.predicate(Predicate("IsLocation", ["locations", "Location"]))
+    mln.predicate(Predicate("IsObject", ["objects", "Object"]))
+    mln.predicate(Predicate("IsAction", ["actions", "Action"]))
+    mln.predicate(Predicate("IsState", ["states", "State"]))
     # declares the markov logic formulas in the markov logic network
     for pred in mln.iterpreds():
-        if "IsA" not in pred.name:
-            mln << "0.0 IsA(+?x, entity) ^ IsA(+?y, entity) ^ " + pred.name + "(+?x, +?y)"
-
+        if "Is" not in pred.name:
+            mln << "0.0 " + rel2mln[pred.name][1][0] + " ^ " + rel2mln[pred.name][1][1] + " ^ " + pred.name + "(+?x, +?y)"
     # loads the 'evidence' to learn markov logic network weights
     db = Database(mln)
     for ent in e2i.keys():
-        db << "IsA(" + ent + ", entity)"
+        ent_type = ent.split("-")[-1]
+        if ent_type == "r":
+            db << "IsRoom(" + ent + ", Room)"
+        elif ent_type == "l":
+            db << "IsLocation(" + ent + ", Location)"
+        elif ent_type == "o":
+            db << "IsObject(" + ent + ", Object)"
+        elif ent_type == "a":
+            db << "IsAction(" + ent + ", Action)"
+        elif ent_type == "s":
+            db << "IsState(" + ent + ", State)"
+        else:
+            print("Error: Unknown entity type for evidence!")
+            exit()
     for triple_idx in range(triples.shape[0]):
         triple = triples[triple_idx]
         h = i2e[triple[0]]
