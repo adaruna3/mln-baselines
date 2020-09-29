@@ -54,6 +54,15 @@ if __name__ == "__main__":
         print("Error, some repeated rels.")
     triples = load_triple_set("train2id", unique=True)
 
+    # output a readable triples file
+    # with open("train.txt", "w") as f:
+    #     for triple_id in range(triples.shape[0]):
+    #         h_id, r_id, t_id = triples[triple_id]
+    #         h = i2e[h_id]
+    #         r = i2r[r_id]
+    #         t = i2e[t_id]
+    #         f.write(h + "\t" + r + "\t" + t + "\n")
+
     # generates the markov logic network
     mln = MLN(logic="FirstOrderLogic", grammar="PRACGrammar")
     # declares the constants
@@ -72,28 +81,27 @@ if __name__ == "__main__":
         else:
             print("Error: Unknown entity type for domains!")
             exit()
-
     # declares the predicates
     rel2mln = {
-        "HasEffect": [["actions", "states"], ["IsAction(?x, Action)", "IsState(?y, State)"]],
-        "InverseActionOf": [["actions", "actions"], ["IsAction(?x, Action)", "IsAction(?y, Action)"]],
-        "InverseStateOf": [["states", "states"], ["IsState(?x, State)", "IsState(?y, State)"]],
-        "ObjInRoom": [["objects", "rooms"], ["IsObject(?x, Object)", "IsRoom(?y, Room)"]],
-        "LocInRoom": [["locations", "rooms"], ["IsLocation(?x, Location)", "IsRoom(?y, Room)"]],
-        "ObjOnLoc": [["objects", "locations"], ["IsObject(?x, Object)", "IsLocation(?y, Location)"]],
-        "ObjInLoc": [["objects", "locations"], ["IsObject(?x, Object)", "IsLocation(?y, Location)"]],
-        "ObjCanBe": [["objects", "actions"], ["IsObject(?x, Object)", "IsAction(?y, Action)"]],
-        "ObjUsedTo": [["objects", "actions"], ["IsObject(?x, Object)", "IsAction(?y, Action)"]],
-        "ObjhasState": [["objects", "states"], ["IsObject(?x, Object)", "IsState(?y, State)"]],
-        "OperatesOn": [["objects", "objects"], ["IsObject(?x, Object)", "IsObject(?y, Object)"]]
+        "HasEffect": [["actions", "states"], ["IsAction(?x)", "IsState(?y)"]],
+        "InverseActionOf": [["actions", "actions"], ["IsAction(?x)", "IsAction(?y)"]],
+        "InverseStateOf": [["states", "states"], ["IsState(?x)", "IsState(?y)"]],
+        "ObjInRoom": [["objects", "rooms"], ["IsObject(?x)", "IsRoom(?y)"]],
+        "LocInRoom": [["locations", "rooms"], ["IsLocation(?x)", "IsRoom(?y)"]],
+        "ObjOnLoc": [["objects", "locations"], ["IsObject(?x)", "IsLocation(?y)"]],
+        "ObjInLoc": [["objects", "locations"], ["IsObject(?x)", "IsLocation(?y)"]],
+        "ObjCanBe": [["objects", "actions"], ["IsObject(?x)", "IsAction(?y)"]],
+        "ObjUsedTo": [["objects", "actions"], ["IsObject(?x)", "IsAction(?y)"]],
+        "ObjhasState": [["objects", "states"], ["IsObject(?x)", "IsState(?y)"]],
+        "OperatesOn": [["objects", "objects"], ["IsObject(?x)", "IsObject(?y)"]]
     }
     for rel in r2i.keys():
         mln.predicate(Predicate(rel, rel2mln[rel][0]))
-    mln.predicate(Predicate("IsRoom", ["rooms", "Room"]))
-    mln.predicate(Predicate("IsLocation", ["locations", "Location"]))
-    mln.predicate(Predicate("IsObject", ["objects", "Object"]))
-    mln.predicate(Predicate("IsAction", ["actions", "Action"]))
-    mln.predicate(Predicate("IsState", ["states", "State"]))
+    mln.predicate(Predicate("IsRoom", ["rooms"]))
+    mln.predicate(Predicate("IsLocation", ["locations"]))
+    mln.predicate(Predicate("IsObject", ["objects"]))
+    mln.predicate(Predicate("IsAction", ["actions"]))
+    mln.predicate(Predicate("IsState", ["states"]))
     # declares the markov logic formulas in the markov logic network
     for pred in mln.iterpreds():
         if "Is" not in pred.name:
@@ -103,15 +111,15 @@ if __name__ == "__main__":
     for ent in e2i.keys():
         ent_type = ent.split("-")[-1]
         if ent_type == "r":
-            db << "IsRoom(" + ent + ", Room)"
+            db << "IsRoom(" + ent + ")"
         elif ent_type == "l":
-            db << "IsLocation(" + ent + ", Location)"
+            db << "IsLocation(" + ent + ")"
         elif ent_type == "o":
-            db << "IsObject(" + ent + ", Object)"
+            db << "IsObject(" + ent + ")"
         elif ent_type == "a":
-            db << "IsAction(" + ent + ", Action)"
+            db << "IsAction(" + ent + ")"
         elif ent_type == "s":
-            db << "IsState(" + ent + ", State)"
+            db << "IsState(" + ent + ")"
         else:
             print("Error: Unknown entity type for evidence!")
             exit()
@@ -121,7 +129,6 @@ if __name__ == "__main__":
         r = i2r[triple[1]]
         t = i2e[triple[2]]
         db << r + "(" + h + ", " + t + ")"
-    
     # runs the learning on the markov logic network to get weights
     start_time = time.time()
     result = MLNLearn(mln=mln, db=db, verbose=True, save=True, multicore=True, profile=True).run()
