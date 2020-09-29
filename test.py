@@ -55,7 +55,7 @@ if __name__ == "__main__":
     triples = load_triple_set("train2id", unique=True)
 
     # generates the markov logic network
-    mln = MLN(logic="FuzzyLogic", grammar="PRACGrammar")
+    mln = MLN(logic="FirstOrderLogic", grammar="PRACGrammar")
     # declares the constants
     for ent in e2i.keys():
         ent_type = ent.split("-")[-1]
@@ -75,17 +75,17 @@ if __name__ == "__main__":
 
     # declares the predicates
     rel2mln = {
-        "HasEffect": [["actions", "states"], ["IsAction(+?x, Action)", "IsState(+?y, State)"]],
-        "InverseActionOf": [["actions", "actions"], ["IsAction(+?x, Action)", "IsAction(+?y, Action)"]],
-        "InverseStateOf": [["states", "states"], ["IsState(+?x, State)", "IsState(+?y, State)"]],
-        "ObjInRoom": [["objects", "rooms"], ["IsObject(+?x, Object)", "IsRoom(+?y, Room)"]],
-        "LocInRoom": [["locations", "rooms"], ["IsLocation(+?x, Location)", "IsRoom(+?y, Room)"]],
-        "ObjOnLoc": [["objects", "locations"], ["IsObject(+?x, Object)", "IsLocation(+?y, Location)"]],
-        "ObjInLoc": [["objects", "locations"], ["IsObject(+?x, Object)", "IsLocation(+?y, Location)"]],
-        "ObjCanBe": [["objects", "actions"], ["IsObject(+?x, Object)", "IsAction(+?y, Action)"]],
-        "ObjUsedTo": [["objects", "actions"], ["IsObject(+?x, Object)", "IsAction(+?y, Action)"]],
-        "ObjhasState": [["objects", "states"], ["IsObject(+?x, Object)", "IsState(+?y, State)"]],
-        "OperatesOn": [["objects", "objects"], ["IsObject(+?x, Object)", "IsObject(+?y, Object)"]]
+        "HasEffect": [["actions", "states"], ["IsAction(?x, Action)", "IsState(?y, State)"]],
+        "InverseActionOf": [["actions", "actions"], ["IsAction(?x, Action)", "IsAction(?y, Action)"]],
+        "InverseStateOf": [["states", "states"], ["IsState(?x, State)", "IsState(?y, State)"]],
+        "ObjInRoom": [["objects", "rooms"], ["IsObject(?x, Object)", "IsRoom(?y, Room)"]],
+        "LocInRoom": [["locations", "rooms"], ["IsLocation(?x, Location)", "IsRoom(?y, Room)"]],
+        "ObjOnLoc": [["objects", "locations"], ["IsObject(?x, Object)", "IsLocation(?y, Location)"]],
+        "ObjInLoc": [["objects", "locations"], ["IsObject(?x, Object)", "IsLocation(?y, Location)"]],
+        "ObjCanBe": [["objects", "actions"], ["IsObject(?x, Object)", "IsAction(?y, Action)"]],
+        "ObjUsedTo": [["objects", "actions"], ["IsObject(?x, Object)", "IsAction(?y, Action)"]],
+        "ObjhasState": [["objects", "states"], ["IsObject(?x, Object)", "IsState(?y, State)"]],
+        "OperatesOn": [["objects", "objects"], ["IsObject(?x, Object)", "IsObject(?y, Object)"]]
     }
     for rel in r2i.keys():
         mln.predicate(Predicate(rel, rel2mln[rel][0]))
@@ -97,7 +97,7 @@ if __name__ == "__main__":
     # declares the markov logic formulas in the markov logic network
     for pred in mln.iterpreds():
         if "Is" not in pred.name:
-            mln << "0.0 " + rel2mln[pred.name][1][0] + " ^ " + rel2mln[pred.name][1][1] + " ^ " + pred.name + "(+?x, +?y)"
+            mln << "0.0 " + rel2mln[pred.name][1][0] + " ^ " + rel2mln[pred.name][1][1] + " ^ " + pred.name + "(?x, ?y)"
     # loads the 'evidence' to learn markov logic network weights
     db = Database(mln)
     for ent in e2i.keys():
@@ -121,6 +121,7 @@ if __name__ == "__main__":
         r = i2r[triple[1]]
         t = i2e[triple[2]]
         db << r + "(" + h + ", " + t + ")"
+    
     # runs the learning on the markov logic network to get weights
     start_time = time.time()
     result = MLNLearn(mln=mln, db=db, verbose=True, save=True, multicore=True, profile=True).run()
