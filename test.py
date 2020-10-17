@@ -62,16 +62,16 @@ if __name__ == "__main__":
     # declares the predicates
     for rel in r2i.keys():
         mln.predicate(Predicate(rel, ["ents", "ents"]))
-    mln.predicate(Predicate("IsA", ["ents", "entity"]))
+    mln.predicate(Predicate("IsEntity", ["ents"]))
     # declares the markov logic formulas in the markov logic network
     for pred in mln.iterpreds():
-        if "IsA" not in pred.name:
-            mln << "0.0 IsA(+?x, entity) ^ IsA(+?y, entity) ^ " + pred.name + "(+?x, +?y)"
+        if "IsEntity" not in pred.name:
+            mln << "0.0 IsEntity(+?x) ^ IsEntity(+?y) ^ " + pred.name + "(+?x, +?y)"
 
     # loads the 'evidence' to learn markov logic network weights
     db = Database(mln)
     for ent in e2i.keys():
-        db << "IsA(" + ent + ", entity)"
+        db << "IsEntity(" + ent + ")"
     for triple_idx in range(triples.shape[0]):
         triple = triples[triple_idx]
         h = i2e[triple[0]]
@@ -80,7 +80,7 @@ if __name__ == "__main__":
         db << r + "(" + h + ", " + t + ")"
     # runs the learning on the markov logic network to get weights
     start_time = time.time()
-    result = MLNLearn(mln=mln, db=db, verbose=True, save=True, multicore=True, profile=True).run()
+    result = MLNLearn(mln=mln, db=db, method="BPLL_CG", verbose=True, save=True, multicore=True, profile=True).run()
     print(" ---- %s seconds ---- " % (time.time() - start_time))
     #result = MLNQuery(verbose=True, mln=mln, db=db).run()
     pdb.set_trace()
