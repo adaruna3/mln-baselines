@@ -64,31 +64,32 @@ if __name__ == "__main__":
     #         f.write(h + "\t" + r + "\t" + t + "\n")
 
     # reduce triples to make reduced MRF
-    r_triples = np.ndarray(shape=(0, 3), dtype=int)
-    r_e2i = {}
-    r_i2e = {}
-    r_r2i = {}
-    r_i2r = {}
-    for triple_idx in range(triples.shape[0]):
-        triple = triples[triple_idx]
-        h = i2e[triple[0]]
-        r = i2r[triple[1]]
-        t = i2e[triple[2]]
-        if "carrot" in h or "carrot" in t or "lime" in h or "lime" in t:
-            r_triples = np.append(r_triples, [triple], axis=0)
-            if triple[0] not in r_i2e:
-                r_i2e[triple[0]] = i2e[triple[0]]
-                r_e2i[i2e[triple[0]]] = triple[0]
-            if triple[2] not in r_i2e:
-                r_i2e[triple[2]] = i2e[triple[2]]
-                r_e2i[i2e[triple[2]]] = triple[2]
-            if triple[1] not in r_i2r:
-                r_i2r[triple[1]] = i2r[triple[1]]
-                r_r2i[i2r[triple[1]]] = triple[1]
+    # r_triples = np.ndarray(shape=(0, 3), dtype=int)
+    # r_e2i = {}
+    # r_i2e = {}
+    # r_r2i = {}
+    # r_i2r = {}
+    # for triple_idx in range(triples.shape[0]):
+    #     triple = triples[triple_idx]
+    #     h = i2e[triple[0]]
+    #     r = i2r[triple[1]]
+    #     t = i2e[triple[2]]
+    #     if "carrot" in h or "carrot" in t or "lime" in h or "lime" in t:
+    #         r_triples = np.append(r_triples, [triple], axis=0)
+    #         if triple[0] not in r_i2e:
+    #             r_i2e[triple[0]] = i2e[triple[0]]
+    #             r_e2i[i2e[triple[0]]] = triple[0]
+    #         if triple[2] not in r_i2e:
+    #             r_i2e[triple[2]] = i2e[triple[2]]
+    #             r_e2i[i2e[triple[2]]] = triple[2]
+    #         if triple[1] not in r_i2r:
+    #             r_i2r[triple[1]] = i2r[triple[1]]
+    #             r_r2i[i2r[triple[1]]] = triple[1]
+
     # generates the markov logic network
     mln = MLN(logic="FirstOrderLogic", grammar="PRACGrammar")
     # declares the constants
-    for ent in r_e2i.keys():
+    for ent in e2i.keys():
         ent_type = ent.split("-")[-1]
         if ent_type == "r":
             mln.update_domain({"rooms": [ent]})
@@ -117,7 +118,7 @@ if __name__ == "__main__":
         "ObjhasState": [["objects", "states"], ["IsObject(?x)", "IsState(?y)"]],
         "OperatesOn": [["objects", "objects"], ["IsObject(?x)", "IsObject(?y)"]]
     }
-    for rel in r_r2i.keys():
+    for rel in r2i.keys():
         mln.predicate(Predicate(rel, rel2mln[rel][0]))
     mln.predicate(Predicate("IsRoom", ["rooms"]))
     mln.predicate(Predicate("IsLocation", ["locations"]))
@@ -130,7 +131,7 @@ if __name__ == "__main__":
             mln << "0.0 " + rel2mln[pred.name][1][0] + " ^ " + rel2mln[pred.name][1][1] + " ^ " + pred.name + "(?x, ?y)"
     # loads the 'evidence' to learn markov logic network weights
     db = Database(mln)
-    for ent in r_e2i.keys():
+    for ent in e2i.keys():
         ent_type = ent.split("-")[-1]
         if ent_type == "r":
             db << "IsRoom(" + ent + ")"
@@ -145,15 +146,18 @@ if __name__ == "__main__":
         else:
             print("Error: Unknown entity type for evidence!")
             exit()
-    for triple_idx in range(r_triples.shape[0]):
-        triple = r_triples[triple_idx]
-        h = r_i2e[triple[0]]
-        r = r_i2r[triple[1]]
-        t = r_i2e[triple[2]]
+    for triple_idx in range(triples.shape[0]):
+        triple = triples[triple_idx]
+        h = i2e[triple[0]]
+        r = i2r[triple[1]]
+        t = i2e[triple[2]]
         db << r + "(" + h + ", " + t + ")"
+
     # runs the learning on the markov logic network to get weights
     start_time = time.time()
-    learned_result = MLNLearn(mln=mln, db=db, verbose=True, save=True, output_filename="learned_weights.mln", multicore=True).run()
+    # learned_result = MLNLearn(mln=mln, db=db, verbose=True, save=True, method="BPLL_CG", output_filename="r_learned_weights.mln", multicore=True).run()
+    # learned_result.tofile("r_learned_weights.mln")
+    learned_result = MLN.load("learned_weights.mln")
+    MLNQuery(queries="OperatesOn(sink-l,carrot-o)", verbose=True, mln=learned_result, db=db).run()
     print(" ---- %s seconds ---- " % (time.time() - start_time))
-    result = MLNQuery(queries="OperatesOn(trashbag-o,lime-o)", method="WCSPInference", verbose=True, mln=learned_result, db=db).run()
     pdb.set_trace()
