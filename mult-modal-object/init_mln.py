@@ -1,19 +1,13 @@
+from copy import copy
+import json
+import numpy as np
+
 from pracmln import MLN
 from pracmln.mln import Predicate
-import numpy as np
-import json
-from copy import copy
+from data_utils import load_flattened_data
 
 import pdb
 
-def load_flattened_data(filename):
-    flattened_data = []
-    with open(filename, "r") as fh:
-        for line in fh:
-            line = line.strip()
-            if line:
-                flattened_data.append(eval(line))
-    return flattened_data
 
 def get_role_constraints(roles, instances):
     hard_roles = {}

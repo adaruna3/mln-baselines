@@ -1,17 +1,10 @@
+from argparse import ArgumentParser
+
 from pracmln import MLN
 from pracmln.mln import Database
+from data_utils import load_flattened_data
 
 import pdb
-
-
-def load_flattened_data(filename):
-    flattened_data = []
-    with open(filename, "r") as fh:
-        for line in fh:
-            line = line.strip()
-            if line:
-                flattened_data.append(eval(line))
-    return flattened_data
 
 
 def format_rv2atoms(instances):
@@ -34,16 +27,21 @@ def generate_databases(mln, instances):
         dbs.append(db)
     return dbs
 
+
 if __name__ == "__main__":
+    parser = ArgumentParser(description="Role-Value Dataset 2 MLN Database")
+    parser.add_argument('input_mln', type=str, help='(.mln)')
+    parser.add_argument('input_dataset', type=str, help='(.txt)')
+    parser.add_argument('output_database', type=str, help='(.db)')
+    args = parser.parse_args()
+
     # loads data for DBs
-    tr = load_flattened_data("train_data.txt")
-    # va = load_flattened_data("val_data.txt")
-    va = []
+    rv = load_flattened_data(args.input_dataset)
     # loads the initial MLN
-    mln = MLN.load("initial.mln")
+    mln = MLN.load(args.input_mln)
     # format from role-value to atoms and save as MLN DBs
-    atoms = format_rv2atoms(tr+va)
+    atoms = format_rv2atoms(rv)
     dbs = generate_databases(mln, atoms)
-    with open("train.db", "w") as f:
+    with open(args.output_database, "w") as f:
         Database.write_dbs(dbs, f)
-    print("The training database for the MLN is in 'train.db'.")
+    print("The database for the MLN is in " + args.output_database + ".")
