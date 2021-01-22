@@ -2,20 +2,9 @@ from argparse import ArgumentParser
 
 from pracmln import MLN
 from pracmln.mln import Database
-from data_utils import load_flattened_data
+from data_utils import load_flattened_data, format_instances_rv2atoms
 
 import pdb
-
-
-def format_rv2atoms(instances):
-    atoms = []
-    for instance in instances:
-        atom = []
-        for rv in instance:
-            role, value = rv
-            atom.append(role + "(" + value + ")")
-        atoms.append(atom)
-    return atoms
 
 
 def generate_databases(mln, instances):
@@ -23,7 +12,7 @@ def generate_databases(mln, instances):
     for atoms in instances:
         db = Database(mln)
         for atom in atoms:
-            db << atom
+            db[atom] = 1.0
         dbs.append(db)
     return dbs
 
@@ -40,7 +29,7 @@ if __name__ == "__main__":
     # loads the initial MLN
     mln = MLN.load(args.input_mln)
     # format from role-value to atoms and save as MLN DBs
-    atoms = format_rv2atoms(rv)
+    atoms = format_instances_rv2atoms(rv)
     dbs = generate_databases(mln, atoms)
     with open(args.output_database, "w") as f:
         Database.write_dbs(dbs, f)

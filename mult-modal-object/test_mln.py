@@ -19,16 +19,14 @@ def extract_rv(db, predname):
 
 
 def generate_test_dbs(role, dbs):
-    labels = []
     test_dbs = copy(dbs)
     for db in test_dbs:
         values = extract_rv(db, role)
         if len(values) != 1:
             print("error: db case not handled.")
             exit()
-        labels.append(values[0])
         db.retractall(role)
-    return labels, test_dbs
+    return test_dbs
 
 
 def extract_predicted(mln, results):
@@ -38,17 +36,28 @@ def extract_predicted(mln, results):
             return mln.logic.parse_literal(atom)[2][0]
 
 
-def evaluate(mln, test_dbs, labels):
-    hits1 = 0
-    for idx in range(len(labels)):
-        label = labels[idx]
+def score_mln(mln, role, test_dbs):
+    num_queries = len(mln.domains[role+"_d"])
+    ranks = {}
+    for idx in range(len(test_dbs)):
         db = test_dbs[idx]
-        wcsp = MLNQuery(queries="class", verbose=False, mln=mln, db=db, method="WCSPInference").run()
-        predicted = extract_predicted(mln, wcsp.results)
-        if predicted == label:
-            hits1 += 1
-    return float(hits1) / float(len(labels))
+        instance_ranks = {}
+        for idq in range(num_queries):
+            wcsp = MLNQuery(queries="class", verbose=False, mln=mln, db=db, method="WCSPInference").run()
+            predicted = extract_predicted(mln, wcsp.results)
+            instance_ranks[predicted] = num_queries - idq
+            db[role + "(" + predicted + ")"] = 0.0
+        ranks[idx] = copy(instance_ranks)
+    return ranks
 
+
+def scores2instance_scores(query_role, roles, positives, negatives, scores):
+    examples = utils.mln_get_instance_examples_dict(positives, negatives, query_role, roles, True)
+    instance_scores = {}
+    for idx in range(len(examples)):
+        for value in examples[idx].keys():
+            instance_scores[examples[idx][value]['rv']] = scores[idx][value]
+    return instance_scores
 
 if __name__ == "__main__":
     parser = ArgumentParser(description="Learn MLN")
@@ -65,13 +74,14 @@ if __name__ == "__main__":
     dbs = Database.load(mln, args.positive_database)
     p_examples = utils.load_flattened_data(args.positive_dataset)
     n_examples = utils.load_flattened_data(args.negative_dataset)
+    # begins testing acceptable roles
     testable_roles = ["class"]
     for role in testable_roles:
         # creates testing DBs with labels
-        labels, test_dbs = generate_test_dbs(role, dbs)
-        # evaluate
-        hits1 = evaluate(mln, test_dbs, labels)
-        print("Hits@1 is " + str(hits1))
-
-    # p_examples, n_examples, roles
-    # result = utils.perturb_positive_instance_for_evaluation(p_examples, n_examples, query_role, roles, True)
+        test_dbs = generate_test_dbs(role, dbs)
+        # gets MLN scores
+        scores = score_mln(mln, role, test_dbs)
+        # makes instance-score datastructure
+        instance_scores = scores2instance_scores(role, roles, p_examples, n_examples, scores)
+        # gets metrics for the role
+        utils.compute_metric_scores(p_examples, n_examples, instance_scores, [role], roles, save_dir="./result")
