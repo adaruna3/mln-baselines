@@ -22,7 +22,11 @@ def compute_metric_scores(positive_data, negative_data, instance_prediction, que
     :return:
     """
     # check predictions
-    for instance in positive_data + negative_data:
+    # NOTE: negative_data not included below bc I am only doing a
+    # single role at a time; however, negative_data contains negatives
+    # for all roles. Therefore, the check would always fail. Removing
+    # negative_data should not affect performance
+    for instance in positive_data:# + negative_data:
         assert tuple(instance) in instance_prediction
 
     # save results and qualitative examples to file

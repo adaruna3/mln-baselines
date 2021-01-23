@@ -59,6 +59,7 @@ def scores2instance_scores(query_role, roles, positives, negatives, scores):
             instance_scores[examples[idx][value]['rv']] = scores[idx][value]
     return instance_scores
 
+
 if __name__ == "__main__":
     parser = ArgumentParser(description="Learn MLN")
     parser.add_argument('input_mln', type=str, help='(.mln)')
@@ -75,7 +76,7 @@ if __name__ == "__main__":
     p_examples = utils.load_flattened_data(args.positive_dataset)
     n_examples = utils.load_flattened_data(args.negative_dataset)
     # begins testing acceptable roles
-    testable_roles = ["class"]
+    testable_roles = ["class", "dampness", "material", "purity", "room", "spatial_distribution", "temperature", "transparency"]
     for role in testable_roles:
         # creates testing DBs with labels
         test_dbs = generate_test_dbs(role, dbs)
