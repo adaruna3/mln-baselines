@@ -38,7 +38,7 @@ def generate_test_dbs(role, dbs):
 
 
 def extract_predicted(mln, results):
-    assert sum(results.values()) == 1
+    assert sum(results.values()) == 1, "wcsp results are empty"
     for atom, belief in results.items():
         if belief:
             return mln.logic.parse_literal(atom)[2][0]
@@ -54,15 +54,18 @@ def score_mln(mln, role, test_dbs):
             wcsp = MLNQuery(queries=role, verbose=False, mln=mln, db=db, method="WCSPInference").run()
             try:
                 predicted = extract_predicted(mln, wcsp.results)
-            except AssertionError:
+            except AssertionError as e:
+                print(e)
+                pdb.set_trace()
                 # MLN ranks none higher then others, rank all other (missing) as lower
                 # TODO this implementation issue can be fixed by having 'none' in domain
-                missing = list(set(mln.domains[role+"_d"]).difference(set(instance_ranks.keys())))
-                for predicted in missing: 
-                    instance_ranks[predicted] = num_queries - idq
-                break
+                #missing = list(set(mln.domains[role+"_d"]).difference(set(instance_ranks.keys())))
+                #for predicted in missing: 
+                #    instance_ranks[predicted] = num_queries - idq
+                #break
             instance_ranks[predicted] = num_queries - idq
             db[role + "(" + predicted + ")"] = 0.0
+            pdb.set_trace()
         if len(instance_ranks) != num_queries:
             pdb.set_trace()
         ranks[idx] = deepcopy(instance_ranks)
@@ -75,10 +78,10 @@ def scores2instance_scores(query_role, roles, positives, negatives, scores):
     for idx in range(len(examples)):
         for value in examples[idx].keys():
             try:
-               instance_scores[examples[idx][value]['rv']] = scores[idx][value]
+                instance_scores[examples[idx][value]['rv']] = scores[idx][value]
             except KeyError as e:
-                print(e)
-                pdb.set_trace()
+                # negative is missing, to be fixed, rank lowest for now
+                instance_scores[examples[idx][value]['rv']] = 1
     return instance_scores
 
 
@@ -94,17 +97,16 @@ if __name__ == "__main__":
     with open("role_to_values.json", "r") as f:
         roles = json.loads(f.readlines()[0])
     mln = MLN.load(args.input_mln)
-    pdb.set_trace()
     dbs = Database.load(mln, args.positive_database)
     p_examples = utils.load_flattened_data(args.positive_dataset)
     n_examples = utils.load_flattened_data(args.negative_dataset)
     # begins testing acceptable roles
-    testable_roles = ["class", "dampness", "material", "purity", "room", "spatial_distribution", "temperature", "transparency"]
-    for role in testable_roles:
+    for role in ["dimension"]:
         # creates testing DBs with labels
         test_dbs = generate_test_dbs(role, dbs)
         # gets MLN scores
         scores = score_mln(mln, role, test_dbs)
+        pdb.set_trace()
         # makes instance-score datastructure
         instance_scores = scores2instance_scores(role, roles, p_examples, n_examples, scores)
         # gets metrics for the role

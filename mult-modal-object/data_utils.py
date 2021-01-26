@@ -221,79 +221,27 @@ def mln_get_instance_examples_dict(positive_data, negative_data, query_role,
                     perturbed_instances.add(perturbed_instance_tuple)
 
         instance_dict = {}
+        values = []
         for role_i in query_role_pos:
             role, value = instance[role_i]
-            instance_dict[value] = {
-                "rv": tuple(instance),
-                "label": 1,
-            }
+            values.append(value)
+        instance_dict[''.join(sorted(values))] = {
+            "rv": tuple(instance),
+            "label": 1,
+        }
         for perturbed_instance in perturbed_instances:
+            values = []
             for role_i in query_role_pos:
                 role, value = perturbed_instance[role_i]
-                instance_dict[value] = {
-                    "rv": perturbed_instance,
-                    "label": 0,
-                }
+                values.append(value)
+            instance_dict[''.join(sorted(values))] = {
+                "rv": perturbed_instance,
+                "label": 0,
+            }
         examples[idx] = instance_dict
         idx += 1
 
     return examples
-
-
-def perturb_positive_instance_for_evaluation(positive_data, negative_data, query_role, role_to_values,
-                                                 ignore_non_object):
-    """
-    For the given query role, this function returns perturbed negative examples for each positive example
-    in positive_data.
-
-    :param positive_data: a list of positive examples
-    :param negative_data: the complete list of negative examples. This list is used to check if a perturbed negative
-    example is valid.
-    :param query_role: the role that will be perturbed
-    :param role_to_values: a dictionary mapping from each role to its candidate values
-    :param ignore_non_object: whether to skip generating negative examples for object instance that doesn't have valid
-    class category.
-    :return: positive_instance_to_perturbed_negative_instances: a dictionary mapping from each positive instance to
-    its corresponding negative instances.
-    """
-
-    positive_instance_to_perturbed_negative_instances = {}
-    candidate_values = role_to_values[query_role]
-    for instance in positive_data:
-        # important: there may be multiple roles that are the query role in the instance. For example, an object
-        #            can have more than one colors
-        # position(s) of the query role in this positive instance
-        query_role_pos = []
-        object_class = None
-        for i, rv_pair in enumerate(instance):
-            if rv_pair[0] == query_role:
-                query_role_pos.append(i)
-            if rv_pair[0] == "class":
-                object_class = rv_pair[1]
-
-        if len(query_role_pos) == 0:
-            continue
-
-        if ignore_non_object:
-            if object_class is None or object_class not in role_to_values["class"]:
-                continue
-
-        # generate negative instances by perturbing the positive instance
-        perturbed_instances = set()
-        for role_i in query_role_pos:
-            for perturbed_value in candidate_values:
-                perturbed_instance = copy.deepcopy(instance)
-                perturbed_instance[role_i] = (query_role, perturbed_value)
-                perturbed_instance = sorted(perturbed_instance)
-                # Important: the following is used to filter out instances that are positive instances in
-                #            test, train, or valid set
-                if perturbed_instance in negative_data:
-                    perturbed_instance_tuple = tuple(perturbed_instance)
-                    perturbed_instances.add(perturbed_instance_tuple)
-
-        positive_instance_to_perturbed_negative_instances[tuple(instance)] = perturbed_instances
-
-    return positive_instance_to_perturbed_negative_instances
 
 
 def load_flattened_data(filename):
@@ -315,3 +263,36 @@ def format_instances_rv2atoms(instances):
             atom.append(role + "(" + value + ")")
         atoms.append(atom)
     return atoms
+
+
+def get_role_constraints(roles, instances):
+    hard_roles = {}
+    soft_roles = {}
+    role_count_init = {}
+
+    for role in roles.keys():
+        hard_roles[role] = 1
+        soft_roles[role] = 1
+        role_count_init[role] = 0
+
+    for instance in instances:
+        role_count = copy.copy(role_count_init)
+        for role, value in instance:
+            role_count[role] += 1
+
+        for role in roles:
+            if role_count[role] != 1:
+                hard_roles[role] = 0
+                if role_count[role] > 1:
+                    soft_roles[role] = 0
+
+    role_constraints = {}
+    for role in roles:
+        if hard_roles[role]:
+            role_constraints[role] = '!'
+        elif soft_roles[role]:
+            role_constraints[role] = '?'
+        else:
+            role_constraints[role] = ''
+
+    return role_constraints

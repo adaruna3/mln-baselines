@@ -17,6 +17,7 @@ if __name__ == "__main__":
     mln = MLN.load(args.input_mln)
     dbs = Database.load(mln, args.input_database)
     # runs the learning on the markov logic network to get weights
+    pdb.set_trace()
     start_time = time.time()
     learned_mln = MLNLearn(mln=mln, db=dbs, verbose=True, method="BPLL_CG", use_prior=True, multicore=True).run()
     learned_mln.tofile(args.output_mln)
