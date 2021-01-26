@@ -42,6 +42,18 @@ def get_role_constraints(roles, instances):
     return role_constraints
 
 
+def get_domains(roles, instances):
+    domains = {role+"_d": set() for role in roles.keys()}
+    for role in roles.keys():
+        for instance in instances:
+            inst_vals = []
+            for inst_role, inst_value in instance:
+                if inst_role == role:
+                    inst_vals.append(inst_value)
+            domains[role+"_d"].add(tuple(sorted(inst_vals)))
+    return domains
+
+
 def get_formulas(filename):
     data = load_flattened_data(filename)
     corr_mat = np.asarray(data[1:])
@@ -65,14 +77,24 @@ if __name__ == "__main__":
     te = load_flattened_data("test_data.txt")
     role_constraints = get_role_constraints(roles, tr + va + te)
     formulas = get_formulas("correlation_matrix.txt")
-
+    domains = get_domains(roles, tr+va+te)
     # generates the markov logic network
     mln = MLN(logic="FirstOrderLogic", grammar="PRACGrammar")
-    for role, values in roles.items():  # constants
+    for domain, values in domains.items():  # domains
         for value in values:
-            mln.update_domain({role+"_d": [value]})
+            if len(value) > 1:
+                const = ','.join(value)
+            elif len(value) > 0:
+                const = value[0]
+            else:
+                const = "None"
+            mln.update_domain({domain: [const]})
+    pdb.set_trace()
     for role in roles.keys():  # predicates
-        mln.predicate(Predicate(role, [role+"_d" + role_constraints[role]]))  # hard-, soft-, and no-functional constraints
+        pred = Predicate(role, [role+"_d!"])
+        pdb.set_trace()
+        mln.predicate(pred)  # hard-functional constraints only
+    pdb.set_trace()
     for formula in formulas:  # formulas
         formula_str = "0.0 "
         for idx in range(len(formula)):
@@ -84,6 +106,7 @@ if __name__ == "__main__":
         mln << formula_str
     mln.write()
     mln.tofile("initial.mln")
+    pdb.set_trace()
     print("The initial MLN has been written to 'initial.mln'.")
     print("Verify the MLN using the print out above.")
     print("NOTE: Weights of 'initial.mln' have NOT been learned.")

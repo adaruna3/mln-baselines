@@ -1,4 +1,5 @@
-from copy import copy
+import sys
+from copy import deepcopy
 from argparse import ArgumentParser
 import json
 
@@ -19,13 +20,20 @@ def extract_rv(db, predname):
 
 
 def generate_test_dbs(role, dbs):
-    test_dbs = copy(dbs)
-    for db in test_dbs:
-        values = extract_rv(db, role)
+    test_dbs = deepcopy(dbs)
+    idx = 0
+    while idx < len(test_dbs):
+        values = extract_rv(test_dbs[idx], role)
         if len(values) != 1:
-            print("error: db case not handled.")
-            exit()
-        db.retractall(role)
+            if len(values) == 0:
+                del test_dbs[idx]
+                continue
+            else:
+                pdb.set_trace()
+                print("error: db case not handled.")
+                exit()
+        test_dbs[idx].retractall(role)
+        idx += 1
     return test_dbs
 
 
@@ -43,11 +51,21 @@ def score_mln(mln, role, test_dbs):
         db = test_dbs[idx]
         instance_ranks = {}
         for idq in range(num_queries):
-            wcsp = MLNQuery(queries="class", verbose=False, mln=mln, db=db, method="WCSPInference").run()
-            predicted = extract_predicted(mln, wcsp.results)
+            wcsp = MLNQuery(queries=role, verbose=False, mln=mln, db=db, method="WCSPInference").run()
+            try:
+                predicted = extract_predicted(mln, wcsp.results)
+            except AssertionError:
+                # MLN ranks none higher then others, rank all other (missing) as lower
+                # TODO this implementation issue can be fixed by having 'none' in domain
+                missing = list(set(mln.domains[role+"_d"]).difference(set(instance_ranks.keys())))
+                for predicted in missing: 
+                    instance_ranks[predicted] = num_queries - idq
+                break
             instance_ranks[predicted] = num_queries - idq
             db[role + "(" + predicted + ")"] = 0.0
-        ranks[idx] = copy(instance_ranks)
+        if len(instance_ranks) != num_queries:
+            pdb.set_trace()
+        ranks[idx] = deepcopy(instance_ranks)
     return ranks
 
 
@@ -56,7 +74,11 @@ def scores2instance_scores(query_role, roles, positives, negatives, scores):
     instance_scores = {}
     for idx in range(len(examples)):
         for value in examples[idx].keys():
-            instance_scores[examples[idx][value]['rv']] = scores[idx][value]
+            try:
+               instance_scores[examples[idx][value]['rv']] = scores[idx][value]
+            except KeyError as e:
+                print(e)
+                pdb.set_trace()
     return instance_scores
 
 
@@ -72,6 +94,7 @@ if __name__ == "__main__":
     with open("role_to_values.json", "r") as f:
         roles = json.loads(f.readlines()[0])
     mln = MLN.load(args.input_mln)
+    pdb.set_trace()
     dbs = Database.load(mln, args.positive_database)
     p_examples = utils.load_flattened_data(args.positive_dataset)
     n_examples = utils.load_flattened_data(args.negative_dataset)

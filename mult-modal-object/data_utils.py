@@ -26,8 +26,8 @@ def compute_metric_scores(positive_data, negative_data, instance_prediction, que
     # single role at a time; however, negative_data contains negatives
     # for all roles. Therefore, the check would always fail. Removing
     # negative_data should not affect performance
-    for instance in positive_data:# + negative_data:
-        assert tuple(instance) in instance_prediction
+    #for instance in positive_data:# + negative_data:
+    #    assert tuple(instance) in instance_prediction
 
     # save results and qualitative examples to file
     if save_dir:
@@ -187,11 +187,11 @@ def mln_get_instance_examples_dict(positive_data, negative_data, query_role,
 
     examples = {}
     candidate_values = role_to_values[query_role]
-    for idx in range(len(positive_data)):
+    idx = 0
+    for instance in positive_data:
         # important: there may be multiple roles that are the query role in the instance. For example, an object
         #            can have more than one colors
         # position(s) of the query role in this positive instance
-        instance = positive_data[idx]
         query_role_pos = []
         object_class = None
         for i, rv_pair in enumerate(instance):
@@ -235,6 +235,7 @@ def mln_get_instance_examples_dict(positive_data, negative_data, query_role,
                     "label": 0,
                 }
         examples[idx] = instance_dict
+        idx += 1
 
     return examples
 
