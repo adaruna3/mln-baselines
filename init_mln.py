@@ -1,5 +1,6 @@
 from itertools import combinations
 from copy import copy
+from argparse import ArgumentParser
 import json
 import numpy as np
 
@@ -46,15 +47,25 @@ def get_formulas(filename):
 
 
 if __name__ == "__main__":
+    parser = ArgumentParser(description="Initialize a new MLN")
+    parser.add_argument("--input_datasets", type=str, help="(.txt)", nargs="*",
+                        default=["./data/train_data.txt","./data/val_data.txt","./data/test_data.txt"])
+    parser.add_argument("--roles_file", type=str, help="(.json)", nargs="?",
+                        default="./data/role_to_values.json")
+    parser.add_argument("--formula_file", type=str, help="(.txt)", nargs="?",
+                        default="./data/formula_matrix.txt")
+    parser.add_argument("--output_mln", type=str, help="(.mln)", nargs="?",
+                        default="./models/initial.mln")
+    args = parser.parse_args()
     # loads the data for MLN
-    with open("role_to_values.json", "r") as f:
+    with open(args.roles_file, "r") as f:
         roles = json.loads(f.readlines()[0])
-    tr = load_flattened_data("train_data.txt")
-    va = load_flattened_data("val_data.txt")
-    te = load_flattened_data("test_data.txt")
-    role_constraints = get_role_constraints(roles, tr + va + te)
-    formulas = get_formulas("correlation_matrix.txt")
-    domains = get_domains(roles, tr+va+te)
+    instances = []
+    for dataset in args.input_datasets:
+        instances += load_flattened_data(dataset)
+    role_constraints = get_role_constraints(roles, instances)
+    formulas = get_formulas(args.formula_file)
+    domains = get_domains(roles, instances)
     # generates the markov logic network
     mln = MLN(logic="FirstOrderLogic", grammar="PRACGrammar")
     for domain, values in domains.items():  # domains
@@ -78,7 +89,7 @@ if __name__ == "__main__":
                 formula_str += role + "(+?" + role[:2] + ")"
         mln << formula_str
     mln.write()
-    mln.tofile("initial.mln")
-    print("The initial MLN has been written to 'initial.mln'.")
+    mln.tofile(args.output_mln)
+    print("The initial MLN has been written to '" + args.output_mln + "'.")
     print("Verify the MLN using the print out above.")
-    print("NOTE: Weights of 'initial.mln' have NOT been learned.")
+    print("NOTE: Weights of '" + args.output_mln + "' have NOT been learned.")
