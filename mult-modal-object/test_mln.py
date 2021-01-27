@@ -46,27 +46,27 @@ def extract_predicted(mln, results):
 
 def score_mln(mln, role, test_dbs):
     num_queries = len(mln.domains[role+"_d"])
+    domain_values = set(deepcopy(mln.domains[role+"_d"]))
     ranks = {}
     for idx in range(len(test_dbs)):
         db = test_dbs[idx]
         instance_ranks = {}
-        for idq in range(num_queries):
-            wcsp = MLNQuery(queries=role, verbose=False, mln=mln, db=db, method="WCSPInference").run()
+        for idq in range(num_queries-1):
             try:
+                wcsp = MLNQuery(queries=role, verbose=False, mln=mln, 
+                                db=db, method="WCSPInference").run()
                 predicted = extract_predicted(mln, wcsp.results)
             except AssertionError as e:
                 print(e)
                 pdb.set_trace()
-                # MLN ranks none higher then others, rank all other (missing) as lower
-                # TODO this implementation issue can be fixed by having 'none' in domain
-                #missing = list(set(mln.domains[role+"_d"]).difference(set(instance_ranks.keys())))
-                #for predicted in missing: 
-                #    instance_ranks[predicted] = num_queries - idq
-                #break
             instance_ranks[predicted] = num_queries - idq
             db[role + "(" + predicted + ")"] = 0.0
-            pdb.set_trace()
-        if len(instance_ranks) != num_queries:
+        missing = domain_values.difference(set(instance_ranks.keys()))
+        try:
+            assert len(missing) == 1, "missing queries"
+            instance_ranks[list(missing)[0]] = 1
+        except AssertionError as e:
+            print(e)
             pdb.set_trace()
         ranks[idx] = deepcopy(instance_ranks)
     return ranks
@@ -101,12 +101,11 @@ if __name__ == "__main__":
     p_examples = utils.load_flattened_data(args.positive_dataset)
     n_examples = utils.load_flattened_data(args.negative_dataset)
     # begins testing acceptable roles
-    for role in ["dimension"]:
+    for role in roles.keys():
         # creates testing DBs with labels
         test_dbs = generate_test_dbs(role, dbs)
         # gets MLN scores
         scores = score_mln(mln, role, test_dbs)
-        pdb.set_trace()
         # makes instance-score datastructure
         instance_scores = scores2instance_scores(role, roles, p_examples, n_examples, scores)
         # gets metrics for the role

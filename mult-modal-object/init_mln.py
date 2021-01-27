@@ -1,3 +1,4 @@
+from itertools import combinations
 from copy import copy
 import json
 import numpy as np
@@ -10,14 +11,23 @@ import pdb
 
 
 def get_domains(roles, instances):
-    domains = {role+"_d": set() for role in roles.keys()}
+    role_max_value_size = {role: [] for role in roles.keys()}
     for role in roles.keys():
         for instance in instances:
             inst_vals = []
             for inst_role, inst_value in instance:
                 if inst_role == role:
                     inst_vals.append(inst_value)
-            domains[role+"_d"].add(tuple(sorted(inst_vals)))
+            if len(inst_vals) not in role_max_value_size[role]:
+                role_max_value_size[role].append(len(inst_vals))
+    domains = {role+"_d": set() for role in roles.keys()}
+    for role, role_sizes in role_max_value_size.items():
+        for role_size in role_sizes:
+            if role_size == 0:
+                domains[role+"_d"].add(tuple(["None"]))
+                continue
+            for value in combinations(roles[role], role_size):
+                domains[role+"_d"].add(tuple(sorted(value)))
     return domains
 
 
