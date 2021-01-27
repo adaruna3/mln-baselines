@@ -87,20 +87,25 @@ def scores2instance_scores(query_role, roles, positives, negatives, scores):
 
 if __name__ == "__main__":
     parser = ArgumentParser(description="Learn MLN")
-    parser.add_argument('input_mln', type=str, help='(.mln)')
-    parser.add_argument('positive_database', type=str, help='(.db)')
-    parser.add_argument('positive_dataset', type=str, help='(.txt)')
-    parser.add_argument('negative_dataset', type=str, help='(.txt)')
+    parser.add_argument("--input_mln", type=str, help="(.mln)", nargs="?",
+                        default="./models/learned.mln")
+    parser.add_argument("--positive_database", type=str, help="(.db)", nargs="?",
+                        default="./data/valid.db")
+    parser.add_argument("--positive_dataset", type=str, help="(.txt)", nargs="?",
+                        default="./data/valid_data.txt")
+    parser.add_argument("--negative_dataset", type=str, help="(.txt)", nargs="?",
+                        default="./data/val_data_negative.txt")
+    parser.add_argument("--roles_file", type=str, help="(.json)", nargs="?",
+                        default="./data/role_to_values.json")
     args = parser.parse_args()
-
     # loads the MLN, DBs, and instances
-    with open("role_to_values.json", "r") as f:
+    with open(args.roles_file, "r") as f:
         roles = json.loads(f.readlines()[0])
     mln = MLN.load(args.input_mln)
     dbs = Database.load(mln, args.positive_database)
     p_examples = utils.load_flattened_data(args.positive_dataset)
     n_examples = utils.load_flattened_data(args.negative_dataset)
-    # begins testing acceptable roles
+    # begins testing roles
     for role in roles.keys():
         # creates testing DBs with labels
         test_dbs = generate_test_dbs(role, dbs)

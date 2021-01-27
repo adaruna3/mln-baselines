@@ -8,9 +8,12 @@ import pdb
 
 if __name__ == "__main__":
     parser = ArgumentParser(description="Learn MLN")
-    parser.add_argument('input_mln', type=str, help='(.mln)')
-    parser.add_argument('input_database', type=str, help='(.db)')
-    parser.add_argument('output_mln', type=str, help='(.mln)')
+    parser.add_argument("--input_mln", type=str, help="(.mln)", nargs="?",
+                        default="./models/initial.mln")
+    parser.add_argument("--input_database", type=str, help="(.db)", nargs="?",
+                        default="./data/train.db")
+    parser.add_argument("--output_mln", type=str, help="(.mln)", nargs="?",
+                        default="./models/learned.mln")
     args = parser.parse_args()
 
     # loads the initial MLN and DBs

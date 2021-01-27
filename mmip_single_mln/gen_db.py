@@ -48,22 +48,27 @@ def rvs2mlnrvs(roles, instances):
 
 if __name__ == "__main__":
     parser = ArgumentParser(description="Role-Value Dataset 2 MLN Database")
-    parser.add_argument('input_mln', type=str, help='(.mln)')
-    parser.add_argument('--input_dataset', type=str, help='(.txt)', nargs="*")
-    parser.add_argument('output_database', type=str, help='(.db)')
+    parser.add_argument("--input_mln", type=str, help="(.mln)", nargs="?",
+                        default="./models/initial.mln")
+    parser.add_argument("--input_datasets", type=str, help="(.txt)", nargs="*",
+                        default=["./data/train_data.txt"])
+    parser.add_argument("--output_database", type=str, help="(.db)", nargs="?",
+                        default="./data/train.db")
+    parser.add_argument("--roles_file", type=str, help="(.json)", nargs="?",
+                        default="./data/role_to_values.json")
     args = parser.parse_args()
-
-    # loads data for DBs
-    with open("role_to_values.json", "r") as f:
-        roles = json.loads(f.readlines()[0])
     # loads the initial MLN
     mln = MLN.load(args.input_mln)
+    # loads data for DBs
     atoms = []
-    for input_dataset in args.input_dataset:
+    with open(args.roles_file, "r") as f:
+        roles = json.loads(f.readlines()[0])
+    for input_dataset in args.input_datasets:
         rv = utils.load_flattened_data(input_dataset)
         rv = rvs2mlnrvs(roles, rv)
-        # format from role-value to atoms and save as MLN DBs
+        # formats role-value to atoms
         atoms += utils.format_instances_rv2atoms(rv)
+    # generates the DBs and saves
     dbs = generate_databases(mln, atoms)
     with open(args.output_database, "w") as f:
         Database.write_dbs(dbs, f)
