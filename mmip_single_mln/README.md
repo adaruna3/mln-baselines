@@ -13,8 +13,10 @@ pip install pracmln
 ```
 
 ## Quickstart
-Use the following commands to train and test MLN after copying ove role-value data into ./data
+Use the following commands to train and test MLN after generating role-value data following the top-level [README](https://github.com/wliu88/multimodal_interactive_perception/blob/master/README.md).
 ```bash
+# move needed data over
+cp ../../data/[CONFIG TYPE]/*.txt ./data
 # initializes a new MLN
 python init_mln.py
 # generates a training database

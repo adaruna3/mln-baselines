@@ -1,7 +1,6 @@
 import sys
 from copy import deepcopy
 from argparse import ArgumentParser
-import json
 
 from pracmln import MLN, MLNQuery
 from pracmln.mln import Database
@@ -80,7 +79,7 @@ def scores2instance_scores(query_role, roles, positives, negatives, scores):
             try:
                 instance_scores[examples[idx][value]['rv']] = scores[idx][value]
             except KeyError as e:
-                # negative is missing, to be fixed, rank lowest for now
+                # negative is missing, rank lowest TODO VERIFY!!
                 instance_scores[examples[idx][value]['rv']] = 1
     return instance_scores
 
@@ -95,18 +94,18 @@ if __name__ == "__main__":
                         default="./data/valid_data.txt")
     parser.add_argument("--negative_dataset", type=str, help="(.txt)", nargs="?",
                         default="./data/val_data_negative.txt")
-    parser.add_argument("--roles_file", type=str, help="(.json)", nargs="?",
-                        default="./data/role_to_values.json")
+    parser.add_argument("--roles_file", type=str, help="(.txt)", nargs="?",
+                        default="./data/role_to_values.txt")
     args = parser.parse_args()
     # loads the MLN, DBs, and instances
     with open(args.roles_file, "r") as f:
-        roles = json.loads(f.readlines()[0])
+        roles = eval(f.readlines()[0])
     mln = MLN.load(args.input_mln)
     dbs = Database.load(mln, args.positive_database)
     p_examples = utils.load_flattened_data(args.positive_dataset)
     n_examples = utils.load_flattened_data(args.negative_dataset)
     # begins testing roles
-    for role in roles.keys():
+    for role in ["color"]: # roles.keys():
         # creates testing DBs with labels
         test_dbs = generate_test_dbs(role, dbs)
         # gets MLN scores

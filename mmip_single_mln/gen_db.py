@@ -1,6 +1,5 @@
 from copy import deepcopy
 from argparse import ArgumentParser
-import json
 
 from pracmln import MLN
 from pracmln.mln import Database
@@ -54,15 +53,15 @@ if __name__ == "__main__":
                         default=["./data/train_data.txt"])
     parser.add_argument("--output_database", type=str, help="(.db)", nargs="?",
                         default="./data/train.db")
-    parser.add_argument("--roles_file", type=str, help="(.json)", nargs="?",
-                        default="./data/role_to_values.json")
+    parser.add_argument("--roles_file", type=str, help="(.txt)", nargs="?",
+                        default="./data/role_to_values.txt")
     args = parser.parse_args()
     # loads the initial MLN
     mln = MLN.load(args.input_mln)
     # loads data for DBs
     atoms = []
     with open(args.roles_file, "r") as f:
-        roles = json.loads(f.readlines()[0])
+        roles = eval(f.readlines()[0])
     for input_dataset in args.input_datasets:
         rv = utils.load_flattened_data(input_dataset)
         rv = rvs2mlnrvs(roles, rv)

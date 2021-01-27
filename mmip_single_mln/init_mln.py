@@ -1,7 +1,6 @@
 from itertools import combinations
 from copy import copy
 from argparse import ArgumentParser
-import json
 import numpy as np
 
 from pracmln import MLN
@@ -50,8 +49,8 @@ if __name__ == "__main__":
     parser = ArgumentParser(description="Initialize a new MLN")
     parser.add_argument("--input_datasets", type=str, help="(.txt)", nargs="*",
                         default=["./data/train_data.txt","./data/val_data.txt","./data/test_data.txt"])
-    parser.add_argument("--roles_file", type=str, help="(.json)", nargs="?",
-                        default="./data/role_to_values.json")
+    parser.add_argument("--roles_file", type=str, help="(.txt)", nargs="?",
+                        default="./data/role_to_values.txt")
     parser.add_argument("--formula_file", type=str, help="(.txt)", nargs="?",
                         default="./data/formula_matrix.txt")
     parser.add_argument("--output_mln", type=str, help="(.mln)", nargs="?",
@@ -59,7 +58,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # loads the data for MLN
     with open(args.roles_file, "r") as f:
-        roles = json.loads(f.readlines()[0])
+        roles = eval(f.readlines()[0])
     instances = []
     for dataset in args.input_datasets:
         instances += load_flattened_data(dataset)
