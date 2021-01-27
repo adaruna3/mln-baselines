@@ -13,11 +13,16 @@ pip install pracmln
 ```
 
 ## Quickstart
-Use the following commands to train and test MLN
+Use the following commands to train and test MLN after copying ove role-value data into ./data
 ```bash
+# initializes a new MLN
 python init_mln.py
-python gen_db.py initial.mln train_data.txt train.db
-python learn_mln.py initial.mln train.db trained.mln
-python gen_db.py initial.mln test_data.txt test.db
-python test_mln.py trained.mln test.db test_data.txt test_data_negative.txt
+# generates a training database
+python gen_db.py
+# trains the initialized MLN using the training database
+python learn_mln.py
+# geneates a validation database (see argparse for testing)  
+python gen_db.py --input_datasets ./data/val_data.txt --output_database ./data/valid.db
+# test the trained MLN on the validation database
+python test_mln.py
 ```
