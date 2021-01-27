@@ -1,0 +1,23 @@
+
+
+
+// predicate declarations
+IsAction(actions)
+IsLocation(locations)
+IsObject(objects)
+IsRoom(rooms)
+IsState(states)
+ObjCanBe(objects,actions)
+ObjInLoc(objects,locations)
+ObjInRoom(objects,rooms)
+ObjOnLoc(objects,locations)
+ObjhasState(objects,states)
+OperatesOn(objects,objects)
+
+// formulas
+-0.531709   IsObject(?x) ^ IsAction(?y) ^ ObjCanBe(?x,?y)
+-2.106841   IsObject(?x) ^ IsLocation(?y) ^ ObjInLoc(?x,?y)
+-0.980829   IsObject(?x) ^ IsRoom(?y) ^ ObjInRoom(?x,?y)
+-2.538974   IsObject(?x) ^ IsLocation(?y) ^ ObjOnLoc(?x,?y)
+-0.316532   IsObject(?x) ^ IsState(?y) ^ ObjhasState(?x,?y)
+-0.743542   IsObject(?x) ^ IsObject(?y) ^ OperatesOn(?x,?y)
