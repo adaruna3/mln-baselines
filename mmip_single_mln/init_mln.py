@@ -5,7 +5,7 @@ import numpy as np
 
 from pracmln import MLN
 from pracmln.mln import Predicate
-from data_utils import load_flattened_data, get_role_constraints
+import data_utils as utils
 
 import pdb
 
@@ -17,7 +17,7 @@ def get_domains(roles, instances):
             inst_vals = []
             for inst_role, inst_value in instance:
                 if inst_role == role:
-                    inst_vals.append(inst_value)
+                    inst_vals.append(inst_value.replace(" ","_"))
             if len(inst_vals) not in role_max_value_size[role]:
                 role_max_value_size[role].append(len(inst_vals))
     domains = {role+"_d": set() for role in roles.keys()}
@@ -32,7 +32,7 @@ def get_domains(roles, instances):
 
 
 def get_formulas(filename):
-    data = load_flattened_data(filename)
+    data = utils.load_flattened_data(filename)
     corr_mat = np.asarray(data[1:])
     role2idx = {data[0][idx]: idx for idx in range(len(data[0]))}
     idx2role = {idx: data[0][idx] for idx in range(len(data[0]))}
@@ -57,12 +57,11 @@ if __name__ == "__main__":
                         default="./models/initial.mln")
     args = parser.parse_args()
     # loads the data for MLN
-    with open(args.roles_file, "r") as f:
-        roles = eval(f.readlines()[0])
+    roles = utils.load_roles(args.roles_file)
     instances = []
     for dataset in args.input_datasets:
-        instances += load_flattened_data(dataset)
-    role_constraints = get_role_constraints(roles, instances)
+        instances += utils.load_flattened_data(dataset)
+    role_constraints = utils.get_role_constraints(roles, instances)
     formulas = get_formulas(args.formula_file)
     domains = get_domains(roles, instances)
     # generates the markov logic network

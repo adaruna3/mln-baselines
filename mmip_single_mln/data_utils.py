@@ -255,12 +255,13 @@ def load_flattened_data(filename):
 
 
 def format_instances_rv2atoms(instances):
+    # takes role-value pairs and makes formats for MLN
     atoms = []
     for instance in instances:
         atom = []
         for rv in instance:
             role, value = rv
-            atom.append(role + "(" + value + ")")
+            atom.append(role + "(" + value.replace(" ","_") + ")")
         atoms.append(atom)
     return atoms
 
@@ -296,3 +297,12 @@ def get_role_constraints(roles, instances):
             role_constraints[role] = ''
 
     return role_constraints
+
+
+def load_roles(roles_file):
+    with open(roles_file, "r") as f:
+        roles = eval(f.readlines()[0])
+        for role, values in roles.items():
+            for idx in range(len(values)):
+                values[idx] = values[idx].replace(" ","_")
+    return roles

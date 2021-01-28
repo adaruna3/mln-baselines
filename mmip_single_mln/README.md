@@ -22,7 +22,7 @@ python init_mln.py
 # generates a training database
 python gen_db.py
 # trains the initialized MLN using the training database
-python learn_mln.py
+python train_mln.py
 # geneates a validation database (see argparse for testing)  
 python gen_db.py --input_datasets ./data/val_data.txt --output_database ./data/valid.db
 # test the trained MLN on the validation database

@@ -19,6 +19,7 @@ def generate_databases(mln, instances):
 
 
 def rvs2mlnrvs(roles, instances):
+    # changes instances from multiple same role pairs to single role with multiple values
     mlninstances = deepcopy(instances)
     all_roles = set(roles.keys())
     mv_roles = [r for r, c in utils.get_role_constraints(roles, mlninstances).items() if c == '']
@@ -60,8 +61,7 @@ if __name__ == "__main__":
     mln = MLN.load(args.input_mln)
     # loads data for DBs
     atoms = []
-    with open(args.roles_file, "r") as f:
-        roles = eval(f.readlines()[0])
+    roles = utils.load_roles(args.roles_file)
     for input_dataset in args.input_datasets:
         rv = utils.load_flattened_data(input_dataset)
         rv = rvs2mlnrvs(roles, rv)
