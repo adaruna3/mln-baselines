@@ -32,6 +32,7 @@ def get_domains(roles, instances):
 
 
 def get_formulas(filename):
+    auto = True if "auto" in filename else False
     data = utils.load_flattened_data(filename)
     corr_mat = np.asarray(data[1:])
     role2idx = {data[0][idx]: idx for idx in range(len(data[0]))}
@@ -39,9 +40,13 @@ def get_formulas(filename):
     formulas = set()
     for qrole, qidx in role2idx.items():
         corr_col = corr_mat[:,qidx]
-        bidx = np.argpartition(corr_col, -1)[-1:]
-        formula = tuple(sorted([idx2role[idx] for idx in bidx] + [qrole]))
-        formulas.add(formula)
+        if auto:  # auto select formula for top 2 of matrix
+            bidx = np.argpartition(corr_col, -2)[-2:]
+        else:  # select all manually set formulas in matrix (non-zero)
+            bidx = [idx for idx in range(corr_col.shape[0]) if corr_col[idx] > 0.0]
+        for idx in bidx:
+             formula = tuple(sorted([idx2role[idx]] + [qrole]))
+             formulas.add(formula)
     return formulas
 
 
@@ -52,7 +57,7 @@ if __name__ == "__main__":
     parser.add_argument("--roles_file", type=str, help="(.txt)", nargs="?",
                         default="./data/role_to_values.txt")
     parser.add_argument("--formula_file", type=str, help="(.txt)", nargs="?",
-                        default="./data/formula_matrix.txt")
+                        default="./data/formula_matrix_auto.txt")
     parser.add_argument("--output_mln", type=str, help="(.mln)", nargs="?",
                         default="./models/initial.mln")
     args = parser.parse_args()
