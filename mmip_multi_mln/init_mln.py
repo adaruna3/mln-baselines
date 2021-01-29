@@ -31,22 +31,22 @@ def get_domains(roles, instances):
     return domains
 
 
-def get_formulas(filename):
+def get_formulas(q_role, filename):
     auto = True if "auto" in filename else False
     data = utils.load_flattened_data(filename)
     corr_mat = np.asarray(data[1:])
     role2idx = {data[0][idx]: idx for idx in range(len(data[0]))}
     idx2role = {idx: data[0][idx] for idx in range(len(data[0]))}
     formulas = set()
-    for qrole, qidx in role2idx.items():
-        corr_col = corr_mat[:,qidx]
-        if auto:  # auto select formula for top 2 of matrix
-            bidx = np.argpartition(corr_col, -1)[-1:]
-        else:  # select all manually set formulas in matrix (non-zero)
-            bidx = [idx for idx in range(corr_col.shape[0]) if corr_col[idx] > 0.0]
-        for idx in bidx:
-             formula = tuple(sorted([idx2role[idx]] + [qrole]))
-             formulas.add(formula)
+    qidx = role2idx[qrole]
+    corr_col = corr_mat[:,qidx]
+    if auto:  # auto select formula for top 2 of matrix
+        bidx = np.argpartition(corr_col, -1)[-1:]
+    else:  # select all manually set formulas in matrix (non-zero)
+        bidx = [idx for idx in range(corr_col.shape[0]) if corr_col[idx] > 0.0]
+    for idx in bidx:
+         formula = tuple(sorted([idx2role[idx]] + [qrole]))
+         formulas.add(formula)
     return formulas
 
 
@@ -58,8 +58,10 @@ if __name__ == "__main__":
                         default="./data/role_to_values.txt")
     parser.add_argument("--formula_file", type=str, help="(.txt)", nargs="?",
                         default="./data/formula_matrix_auto.txt")
-    parser.add_argument("--output_mln", type=str, help="(.mln)", nargs="?",
-                        default="./models/initial.mln")
+    parser.add_argument("--output_mln", type=str, help="models", nargs="?",
+                        default="./models/class.mln")
+    parser.add_argument("--query_role", type=str, help="class,color,etc.", nargs="?",
+                        default="class")
     args = parser.parse_args()
     # loads the data for MLN
     roles = utils.load_roles(args.roles_file)
@@ -67,7 +69,7 @@ if __name__ == "__main__":
     for dataset in args.input_datasets:
         instances += utils.load_flattened_data(dataset)
     role_constraints = utils.get_role_constraints(roles, instances)
-    formulas = get_formulas(args.formula_file)
+    formulas = get_formulas(args.query_role, args.formula_file)
     domains = get_domains(roles, instances)
     # generates the markov logic network
     mln = MLN(logic="FirstOrderLogic", grammar="PRACGrammar")

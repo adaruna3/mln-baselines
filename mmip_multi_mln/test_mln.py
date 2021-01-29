@@ -87,7 +87,7 @@ def scores2instance_scores(query_role, roles, positives, negatives, scores):
 if __name__ == "__main__":
     parser = ArgumentParser(description="Learn MLN")
     parser.add_argument("--input_mln", type=str, help="(.mln)", nargs="?",
-                        default="./models/learned.mln")
+                        default="./models/class_learned.mln")
     parser.add_argument("--positive_database", type=str, help="(.db)", nargs="?",
                         default="./data/valid.db")
     parser.add_argument("--positive_dataset", type=str, help="(.txt)", nargs="?",
@@ -96,6 +96,8 @@ if __name__ == "__main__":
                         default="./data/val_data_negative.txt")
     parser.add_argument("--roles_file", type=str, help="(.txt)", nargs="?",
                         default="./data/role_to_values.txt")
+    parser.add_argument("--query_role", type=str, help="class,color,etc.", nargs="?",
+                        default="class")
     args = parser.parse_args()
     # loads the MLN, DBs, and instances
     with open(args.roles_file, "r") as f:
@@ -104,13 +106,11 @@ if __name__ == "__main__":
     dbs = Database.load(mln, args.positive_database)
     p_examples = utils.load_flattened_data(args.positive_dataset)
     n_examples = utils.load_flattened_data(args.negative_dataset)
-    # begins testing roles
-    for role in roles.keys()
-        # creates testing DBs with labels
-        test_dbs = generate_test_dbs(role, dbs)
-        # gets MLN scores
-        scores = score_mln(mln, role, test_dbs)
-        # makes instance-score datastructure
-        instance_scores = scores2instance_scores(role, roles, p_examples, n_examples, scores)
-        # gets metrics for the role
-        utils.compute_metric_scores(p_examples, n_examples, instance_scores, [role], roles, save_dir="./results")
+    # creates testing DBs with labels
+    test_dbs = generate_test_dbs(args.query_role, dbs)
+    # gets MLN scores
+    scores = score_mln(mln, args.query_role, test_dbs)
+    # makes instance-score datastructure
+    instance_scores = scores2instance_scores(args.query_role, roles, p_examples, n_examples, scores)
+    # gets metrics for the role
+    utils.compute_metric_scores(p_examples, n_examples, instance_scores, [args.query_role], roles, save_dir="./results")
