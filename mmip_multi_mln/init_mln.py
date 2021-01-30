@@ -31,7 +31,7 @@ def get_domains(roles, instances):
     return domains
 
 
-def get_formulas(q_role, filename):
+def get_formulas(qrole, filename):
     auto = True if "auto" in filename else False
     data = utils.load_flattened_data(filename)
     corr_mat = np.asarray(data[1:])
@@ -56,8 +56,8 @@ if __name__ == "__main__":
                         default=["./data/train_data.txt","./data/val_data.txt","./data/test_data.txt"])
     parser.add_argument("--roles_file", type=str, help="(.txt)", nargs="?",
                         default="./data/role_to_values.txt")
-    parser.add_argument("--formula_file", type=str, help="(.txt)", nargs="?",
-                        default="./data/formula_matrix_auto.txt")
+    parser.add_argument("--formula_file", type=str, help="(.mx)", nargs="?",
+                        default="./data/formula_matrix_auto.mx")
     parser.add_argument("--output_mln", type=str, help="models", nargs="?",
                         default="./models/class.mln")
     parser.add_argument("--query_role", type=str, help="class,color,etc.", nargs="?",

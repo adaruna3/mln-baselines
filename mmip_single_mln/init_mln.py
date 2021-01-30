@@ -56,8 +56,8 @@ if __name__ == "__main__":
                         default=["./data/train_data.txt","./data/val_data.txt","./data/test_data.txt"])
     parser.add_argument("--roles_file", type=str, help="(.txt)", nargs="?",
                         default="./data/role_to_values.txt")
-    parser.add_argument("--formula_file", type=str, help="(.txt)", nargs="?",
-                        default="./data/formula_matrix_auto.txt")
+    parser.add_argument("--formula_file", type=str, help="(.mx)", nargs="?",
+                        default="./data/formula_matrix_auto.mx")
     parser.add_argument("--output_mln", type=str, help="(.mln)", nargs="?",
                         default="./models/initial.mln")
     args = parser.parse_args()

@@ -1,6 +1,7 @@
 import sys
 from copy import deepcopy
 from argparse import ArgumentParser
+from time import time
 
 from pracmln import MLN, MLNQuery
 from pracmln.mln import Database
@@ -53,7 +54,7 @@ def score_mln(mln, role, test_dbs):
         for idq in range(num_queries-1):
             try:
                 wcsp = MLNQuery(queries=role, verbose=False, mln=mln, 
-                                db=db, method="WCSPInference").run()
+                                db=db, method="WCSPInference", multicore=False).run()
                 predicted = extract_predicted(mln, wcsp.results)
             except AssertionError as e:
                 print(e)
@@ -106,7 +107,8 @@ if __name__ == "__main__":
     dbs = Database.load(mln, args.positive_database)
     p_examples = utils.load_flattened_data(args.positive_dataset)
     n_examples = utils.load_flattened_data(args.negative_dataset)
-    # creates testing DBs with labels
+    start = time()
+    # creates testing DBs
     test_dbs = generate_test_dbs(args.query_role, dbs)
     # gets MLN scores
     scores = score_mln(mln, args.query_role, test_dbs)
@@ -114,3 +116,5 @@ if __name__ == "__main__":
     instance_scores = scores2instance_scores(args.query_role, roles, p_examples, n_examples, scores)
     # gets metrics for the role
     utils.compute_metric_scores(p_examples, n_examples, instance_scores, [args.query_role], roles, save_dir="./results")
+    duration = int( (time()-start) / 60.0)
+    print("Testing " + str(args.query_role) + " took " + str(duration) + " minutes.")

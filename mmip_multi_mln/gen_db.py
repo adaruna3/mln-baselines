@@ -18,28 +18,36 @@ def generate_databases(mln, instances):
     return dbs
 
 
-def rvs2mlnrvs(roles, instances):
+def rvs2mlnrvs(mln, roles, instances):
     # changes instances from multiple same role pairs to single role with multiple values
+    # also removes roles not within the domain of the MLN (multi)
     mlninstances = deepcopy(instances)
-    all_roles = set(roles.keys())
     mv_roles = [r for r, c in utils.get_role_constraints(roles, mlninstances).items() if c == '']
+    domain_roles = set([d[:-2] for d in mln.domains.keys()])
     for instance in mlninstances:
         instance_roles = set()
         instance_mv_roles = {role: [] for role in mv_roles}
         rv_idx = 0
         while rv_idx < len(instance):
             role, value = instance[rv_idx]
+            # checks role is in domains of MLN, else skip
+            if role not in domain_roles:
+                del instance[rv_idx]
+                continue
+            # removes multi-valued roles to re-assign in MLN format
             instance_roles.add(role)
             if role in mv_roles:
                 instance_mv_roles[role].append(value)
                 del instance[rv_idx]
             else:
                 rv_idx += 1
-        missing = all_roles.difference(instance_roles)
+        missing = domain_roles.difference(instance_roles)
+        # adds in the missing roles as Nones
         for role in missing:
             instance.append(tuple((role, "None")))
             if role in instance_mv_roles:
                 del instance_mv_roles[role]
+        # adds in the multi-valued roles in MLN format
         for role, values in instance_mv_roles.items():
             values = ''.join(sorted(values))
             instance.append(tuple((role, values)))
@@ -64,7 +72,7 @@ if __name__ == "__main__":
     roles = utils.load_roles(args.roles_file)
     for input_dataset in args.input_datasets:
         rv = utils.load_flattened_data(input_dataset)
-        rv = rvs2mlnrvs(roles, rv)
+        rv = rvs2mlnrvs(mln, roles, rv)
         # formats role-value to atoms
         atoms += utils.format_instances_rv2atoms(rv)
     # generates the DBs and saves

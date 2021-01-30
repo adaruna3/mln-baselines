@@ -1,6 +1,7 @@
 import sys
 from copy import deepcopy
 from argparse import ArgumentParser
+from time import time
 
 from pracmln import MLN, MLNQuery
 from pracmln.mln import Database
@@ -104,8 +105,10 @@ if __name__ == "__main__":
     dbs = Database.load(mln, args.positive_database)
     p_examples = utils.load_flattened_data(args.positive_dataset)
     n_examples = utils.load_flattened_data(args.negative_dataset)
+    test_times = []
     # begins testing roles
-    for role in roles.keys()
+    for role in roles.keys():
+        start = time()
         # creates testing DBs with labels
         test_dbs = generate_test_dbs(role, dbs)
         # gets MLN scores
@@ -114,3 +117,8 @@ if __name__ == "__main__":
         instance_scores = scores2instance_scores(role, roles, p_examples, n_examples, scores)
         # gets metrics for the role
         utils.compute_metric_scores(p_examples, n_examples, instance_scores, [role], roles, save_dir="./results")
+        test_times.append(time()-start)
+    for r_idx in range(len(roles.keys())):
+        duration = int( test_times[r_idx] / 60.0)
+        role = [r for r in roles.keys()][r_idx]
+        print("Testing " + str(role) + " took " + str(duration) + " minutes.")
