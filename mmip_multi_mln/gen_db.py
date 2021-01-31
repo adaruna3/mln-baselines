@@ -57,7 +57,7 @@ def rvs2mlnrvs(mln, roles, instances):
 if __name__ == "__main__":
     parser = ArgumentParser(description="Role-Value Dataset 2 MLN Database")
     parser.add_argument("--input_mln", type=str, help="(.mln)", nargs="?",
-                        default="./models/class.mln")
+                        default="./models/class_initial.mln")
     parser.add_argument("--input_datasets", type=str, help="(.txt)", nargs="*",
                         default=["./data/train_data.txt"])
     parser.add_argument("--output_database", type=str, help="(.db)", nargs="?",

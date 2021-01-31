@@ -90,7 +90,7 @@ if __name__ == "__main__":
     parser.add_argument("--input_mln", type=str, help="(.mln)", nargs="?",
                         default="./models/class_learned.mln")
     parser.add_argument("--positive_database", type=str, help="(.db)", nargs="?",
-                        default="./data/valid.db")
+                        default="./data/class_valid.db")
     parser.add_argument("--positive_dataset", type=str, help="(.txt)", nargs="?",
                         default="./data/valid_data.txt")
     parser.add_argument("--negative_dataset", type=str, help="(.txt)", nargs="?",
@@ -117,4 +117,5 @@ if __name__ == "__main__":
     # gets metrics for the role
     utils.compute_metric_scores(p_examples, n_examples, instance_scores, [args.query_role], roles, save_dir="./results")
     duration = int( (time()-start) / 60.0)
-    print("Testing " + str(args.query_role) + " took " + str(duration) + " minutes.")
+    with open("./results/" + args.query_role + "_testtime.txt", "w") as f:
+        f.write(" ---- %s minutes ---- \n" % duration)

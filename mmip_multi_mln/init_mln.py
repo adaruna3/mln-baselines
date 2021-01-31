@@ -59,7 +59,7 @@ if __name__ == "__main__":
     parser.add_argument("--formula_file", type=str, help="(.mx)", nargs="?",
                         default="./data/formula_matrix_auto.mx")
     parser.add_argument("--output_mln", type=str, help="models", nargs="?",
-                        default="./models/class.mln")
+                        default="./models/class_initial.mln")
     parser.add_argument("--query_role", type=str, help="class,color,etc.", nargs="?",
                         default="class")
     args = parser.parse_args()
@@ -89,9 +89,9 @@ if __name__ == "__main__":
         for idx in range(len(formula)):
             role = formula[idx]
             if idx+1 < len(formula):
-                formula_str += role + "(+?" + role[:2] + ")" + " ^ "
+                formula_str += role + "(+?" + role[:3] + ")" + " ^ "
             else:
-                formula_str += role + "(+?" + role[:2] + ")"
+                formula_str += role + "(+?" + role[:3] + ")"
         mln << formula_str
     mln.write()
     mln.tofile(args.output_mln)
