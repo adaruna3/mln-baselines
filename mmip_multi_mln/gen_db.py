@@ -44,11 +44,15 @@ def rvs2mlnrvs(mln, roles, instances):
         missing = domain_roles.difference(instance_roles)
         # adds in the missing roles as Nones
         for role in missing:
+            if role not in domain_roles:
+                continue
             instance.append(tuple((role, "None")))
             if role in instance_mv_roles:
                 del instance_mv_roles[role]
         # adds in the multi-valued roles in MLN format
         for role, values in instance_mv_roles.items():
+            if role not in domain_roles:
+                continue
             values = ''.join(sorted(values))
             instance.append(tuple((role, values)))
     return mlninstances

@@ -15,14 +15,12 @@ if __name__ == "__main__":
     parser.add_argument("--output_mln", type=str, help="models", nargs="?",
                         default="./models/class_learned.mln")
     args = parser.parse_args()
-
     # loads the initial MLN and DBs
     mln = MLN.load(args.input_mln)
     dbs = Database.load(mln, args.input_database)
     # runs the learning on the markov logic network to get weights
     start = time()
     learned_mln = MLNLearn(mln=mln, db=dbs, verbose=True, method="BPLL_CG", use_prior=True, multicore=True).run()
-    pdb.set_trace()
     learned_mln.tofile(args.output_mln)
     duration = int( (time()-start) / 60.0)
     with open("./results/" + args.output_mln.split("/")[2].split(".")[0] + "_traintime.txt", "w") as f:
