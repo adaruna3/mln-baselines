@@ -2,6 +2,7 @@ import sys
 from copy import deepcopy
 from argparse import ArgumentParser
 from time import time
+from multiprocessing import set_start_method
 
 from pracmln import MLN, MLNQuery
 from pracmln.mln import Database
@@ -54,7 +55,7 @@ def score_mln(mln, role, test_dbs):
         for idq in range(num_queries-1):
             try:
                 wcsp = MLNQuery(queries=role, verbose=False, mln=mln, 
-                                db=db, method="WCSPInference", multicore=False).run()
+                                db=db, method="WCSPInference", multicore=True).run()
                 predicted = extract_predicted(mln, wcsp.results)
             except AssertionError as e:
                 print(e)
@@ -86,6 +87,7 @@ def scores2instance_scores(query_role, roles, positives, negatives, scores):
 
 
 if __name__ == "__main__":
+    set_start_method("spawn")
     parser = ArgumentParser(description="Learn MLN")
     parser.add_argument("--input_mln", type=str, help="(.mln)", nargs="?",
                         default="./models/class_learned.mln")

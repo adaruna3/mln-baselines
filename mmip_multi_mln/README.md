@@ -23,8 +23,8 @@ cp ../../data/[CONFIG TYPE]/*.txt ./data
 python gen_db.py
 # trains each initialized MLN using the training database
 ./scripts/train_mlns.sh
-# geneates a validation database (see argparse for testing)  
-python gen_db.py --input_datasets ./data/val_data.txt --output_database ./data/valid.db
+# geneates a validation database (see other script testing)
+./scripts/gen_valid_dbs.sh
 # test the trained MLN on the validation database
-python test_mln.py
+./scripts/validate_mlns.sh
 ```

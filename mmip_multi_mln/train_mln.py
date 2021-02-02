@@ -1,5 +1,6 @@
 from time import time
 from argparse import ArgumentParser
+from multiprocessing import set_start_method
 
 from pracmln import MLN, MLNLearn
 from pracmln.mln import Database
@@ -7,6 +8,7 @@ from pracmln.mln import Database
 import pdb
 
 if __name__ == "__main__":
+    set_start_method("spawn")
     parser = ArgumentParser(description="Learn MLN")
     parser.add_argument("--input_mln", type=str, help="(.mln)", nargs="?",
                         default="./models/class_initial.mln")
