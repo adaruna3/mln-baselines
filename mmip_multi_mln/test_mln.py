@@ -55,7 +55,7 @@ def score_mln(mln, role, test_dbs):
         for idq in range(num_queries-1):
             try:
                 wcsp = MLNQuery(queries=role, verbose=False, mln=mln, 
-                                db=db, method="WCSPInference", multicore=True).run()
+                                db=db, method="WCSPInference", multicore=False).run()
                 predicted = extract_predicted(mln, wcsp.results)
             except AssertionError as e:
                 print(e)

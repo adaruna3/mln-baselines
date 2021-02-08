@@ -43,10 +43,21 @@ def get_formulas(qrole, filename):
     if auto:  # auto select formula for top 2 of matrix
         bidx = np.argpartition(corr_col, -1)[-1:]
     else:  # select all manually set formulas in matrix (non-zero)
-        bidx = [idx for idx in range(corr_col.shape[0]) if corr_col[idx] > 0.0]
-    for idx in bidx:
-         formula = tuple(sorted([idx2role[idx]] + [qrole]))
-         formulas.add(formula)
+        bidx = {}
+        for idx in range(corr_col.shape[0]):
+            formula_id = int(corr_col[idx])
+            if formula_id > 0:
+                if formula_id in bidx:
+                    bidx[formula_id].append(idx)
+                else:
+                    bidx[formula_id] = [idx]
+    for fidx in bidx.keys():
+        formula = []
+        for pidx in bidx[fidx]:
+            formula += [idx2role[pidx]]
+        formula += [qrole]
+        formula = tuple(sorted(formula))
+        formulas.add(formula)
     return formulas
 
 
