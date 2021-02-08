@@ -1,6 +1,7 @@
 from time import time
 from argparse import ArgumentParser
 from multiprocessing import set_start_method
+from random import shuffle
 
 from pracmln import MLN, MLNLearn
 from pracmln.mln import Database
@@ -16,10 +17,14 @@ if __name__ == "__main__":
                         default="./data/train.db")
     parser.add_argument("--output_mln", type=str, help="models", nargs="?",
                         default="./models/class_learned.mln")
+    parser.add_argument("--shuffle", type=bool, help="1 or 0", nargs="?",
+                        default="True")
     args = parser.parse_args()
     # loads the initial MLN and DBs
     mln = MLN.load(args.input_mln)
     dbs = Database.load(mln, args.input_database)
+    if args.shuffle:
+        shuffle(dbs)
     # runs the learning on the markov logic network to get weights
     start = time()
     learned_mln = MLNLearn(mln=mln, db=dbs, verbose=True, method="BPLL_CG", use_prior=True, multicore=True).run()
