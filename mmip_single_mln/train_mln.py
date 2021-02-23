@@ -23,4 +23,6 @@ if __name__ == "__main__":
     start_time = time.time()
     learned_mln = MLNLearn(mln=mln, db=dbs, verbose=True, method="BPLL_CG", use_prior=True, multicore=True).run()
     learned_mln.tofile(args.output_mln)
-    print(" ---- %s seconds ---- " % (time.time() - start_time))
+    duration = int( (time()-start) / 60.0)
+    with open("./results/" + args.output_mln.split("/")[2].split(".")[0] + "_traintime.txt", "w") as f:
+        f.write(" ---- %s minutes ---- \n" % duration)

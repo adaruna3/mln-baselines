@@ -20,11 +20,11 @@ cp ../../data/[CONFIG TYPE]/*.txt ./data
 # initializes a new MLN
 python init_mln.py
 # generates a training database
-python gen_db.py
+python gen_db.py --output_database train.db --input_dataset train_data.txt
 # trains the initialized MLN using the training database
 python train_mln.py
-# geneates a validation database (see argparse for testing)  
-python gen_db.py --input_datasets ./data/val_data.txt --output_database ./data/valid.db
+# geneates a test database (see argparse for valiation)
+python gen_db.py --output_database test.db --input_dataset test_data.txt
 # test the trained MLN on the validation database
-python test_mln.py
+python test_mln.py --positive_database test.db --positive_dataset test_data.txt --negative_dataset test_data_negative.txt
 ```

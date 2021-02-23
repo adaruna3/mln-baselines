@@ -117,8 +117,6 @@ if __name__ == "__main__":
         instance_scores = scores2instance_scores(role, roles, p_examples, n_examples, scores)
         # gets metrics for the role
         utils.compute_metric_scores(p_examples, n_examples, instance_scores, [role], roles, save_dir="./results")
-        test_times.append(time()-start)
-    for r_idx in range(len(roles.keys())):
-        duration = int( test_times[r_idx] / 60.0)
-        role = [r for r in roles.keys()][r_idx]
-        print("Testing " + str(role) + " took " + str(duration) + " minutes.")
+        duration = int( (time()-start) / 60.0)
+        with open("./results/" + str(role) + "_testtime.txt", "w") as f:
+            f.write(" ---- %s minutes ---- \n" % duration)
