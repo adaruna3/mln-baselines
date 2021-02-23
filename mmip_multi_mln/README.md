@@ -9,7 +9,7 @@ Use the following commands to install MLN pacakge
 ```bash
 conda create -n pracmln python=3.6
 conda activate pracmln
-pip install pracmln
+pip install pracmln numpy pandas scipy
 ```
 
 ## Quickstart
